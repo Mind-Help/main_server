@@ -8,7 +8,10 @@ edition = "2021"
 [dependencies]
 tokio = { version = "1.20.1", features = ["full"] }
 axum = "0.5.15"
-async-graphql = "4.0.10"
-async-graphql-axum = "4.0.10"
+async-graphql = "4.0.12"
+async-graphql-axum = "4.0.12"
 tokio-postgres = "0.7.7"
+chrono = "0.4.22"
+rust-argon2 = "1.0.0"
+uuid = {version = "1.1.2", features = ["v4", "fast-rng"]}
 dotenv = "0.15.0"

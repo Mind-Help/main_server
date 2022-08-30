@@ -1,7 +1,10 @@
 use async_graphql::MergedObject;
-use test_query::MainQuery;
 
-mod test_query;
+use doctors_query::DoctorsQuery;
+use users_query::UserQuery;
+
+mod doctors_query;
+mod users_query;
 
 #[derive(MergedObject, Default)]
-pub struct Query(MainQuery);
+pub struct Query(UserQuery, DoctorsQuery);

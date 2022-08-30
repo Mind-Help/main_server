@@ -14,7 +14,7 @@ mod gql;
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
-    let schema = build_schema();
+    let schema = build_schema().await;
 
     let app = Router::new()
         .route("/", get(graphql_playground).post(graphql_handler))
