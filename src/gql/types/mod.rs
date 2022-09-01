@@ -5,12 +5,12 @@ pub mod date;
 pub mod uuid;
 
 pub fn from_db_result<T>(db_result: Result<T, Error>) -> GqlResult<T> {
-    match db_result {
-        Ok(val) => Ok(val),
-        Err(err) => Err(GqlError {
-            message: format!("DATABASE ERROR: {}", err),
-            extensions: None,
-            source: None,
-        }),
-    }
+	match db_result {
+		Ok(val) => Ok(val),
+		Err(err) => Err(GqlError {
+			message: format!("DATABASE ERROR: {}", err),
+			extensions: None,
+			source: None,
+		}),
+	}
 }

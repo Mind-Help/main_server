@@ -746,6 +746,7 @@ dependencies = [
  "rust-argon2",
  "tokio",
  "tokio-postgres",
+ "tower-http",
  "uuid",
 ]
 
@@ -1454,6 +1455,7 @@ dependencies = [
  "tower",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]
