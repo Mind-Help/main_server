@@ -14,4 +14,8 @@ impl DoctorsQuery {
 		let db = ctx.data::<Database>().unwrap();
 		from_db_result(db.get_doctors().await)
 	}
+	async fn get_doctor(&self, ctx: &Context<'_>, id: String) -> Result<Doctor> {
+		let db = ctx.data::<Database>().unwrap();
+		from_db_result(db.get_doctor(id).await)
+	}
 }

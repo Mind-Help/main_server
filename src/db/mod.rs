@@ -47,7 +47,7 @@ impl Database {
 	pub async fn update_user(&self) -> Result<User, Error> {
 		todo!()
 	}
-	pub async fn delete_user(&self, id: String) -> Result<(), Error> {
+	pub async fn delete_user(&self, id: String) -> Result<bool, Error> {
 		todo!()
 	}
 	pub async fn create_doctor(
@@ -69,7 +69,7 @@ impl Database {
 	pub async fn update_doctor(&self) -> Result<Doctor, Error> {
 		todo!()
 	}
-	pub async fn delete_doctor(&self, id: String) -> Result<(), Error> {
+	pub async fn delete_doctor(&self, id: String) -> Result<bool, Error> {
 		todo!()
 	}
 }

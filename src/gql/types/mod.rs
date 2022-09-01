@@ -3,6 +3,7 @@ use tokio_postgres::Error;
 
 pub mod date;
 pub mod uuid;
+pub mod input;
 
 pub fn from_db_result<T>(db_result: Result<T, Error>) -> GqlResult<T> {
 	match db_result {

@@ -14,4 +14,8 @@ impl UserQuery {
 		let db = ctx.data::<Database>().unwrap();
 		from_db_result(db.get_users().await)
 	}
+	async fn get_user(&self, ctx: &Context<'_>, id: String) -> Result<User> {
+		let db = ctx.data::<Database>().unwrap();
+		from_db_result(db.get_user(id).await)
+	}
 }
