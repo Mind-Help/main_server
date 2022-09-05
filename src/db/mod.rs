@@ -1,8 +1,6 @@
-use std::env::var;
-use std::str::FromStr;
+use redis::{Client, JsonAsyncCommands, RedisResult};
 
 use models::*;
-use tokio_postgres::{Client, Config, Error, NoTls};
 
 pub mod models;
 
@@ -11,21 +9,8 @@ pub struct Database {
 }
 
 impl Database {
-	pub async fn new() -> Result<Self, Error> {
-		let db_config = Config::from_str(
-			var("DATABASE_URL")
-				.expect("$DATABASE_URL not found")
-				.as_str(),
-		)?;
-
-		let (client, connection) = db_config.connect(NoTls).await?;
-
-		tokio::spawn(async move {
-			if let Err(e) = connection.await {
-				eprintln!("connection error: {}", e);
-			}
-		});
-
+	pub async fn new() -> RedisResult<Self> {
+		let client = Client::open(env!("REDIS_URL"))?;
 		Ok(Self { client })
 	}
 	pub async fn create_user(
@@ -35,19 +20,26 @@ impl Database {
 		password: String,
 		phone: String,
 		status: UserStatus,
-	) -> Result<User, Error> {
-		Ok(User::new(name, email, password, phone, status))
+	) -> RedisResult<User> {
+		let user = User::new(name, email, password, phone, status);
+		let x = self
+			.client
+			.get_tokio_connection()
+			.await?
+			.json_set::<_, _, _, User>(user.id.0.to_string(), false, &user)
+			.await?;
+		Ok(x)
 	}
-	pub async fn get_user(&self, id: String) -> Result<User, Error> {
+	pub async fn get_user(&self, id: String) -> RedisResult<User> {
 		todo!()
 	}
-	pub async fn get_users(&self) -> Result<Vec<User>, Error> {
+	pub async fn get_users(&self) -> RedisResult<Vec<User>> {
 		todo!()
 	}
-	pub async fn update_user(&self) -> Result<User, Error> {
+	pub async fn update_user(&self) -> RedisResult<User> {
 		todo!()
 	}
-	pub async fn delete_user(&self, id: String) -> Result<bool, Error> {
+	pub async fn delete_user(&self, id: String) -> RedisResult<bool> {
 		todo!()
 	}
 	pub async fn create_doctor(
@@ -57,19 +49,19 @@ impl Database {
 		password: String,
 		phone: String,
 		resume: String,
-	) -> Result<Doctor, Error> {
+	) -> RedisResult<Doctor> {
 		Ok(Doctor::new(name, email, password, phone, resume))
 	}
-	pub async fn get_doctor(&self, id: String) -> Result<Doctor, Error> {
+	pub async fn get_doctor(&self, id: String) -> RedisResult<Doctor> {
 		todo!()
 	}
-	pub async fn get_doctors(&self) -> Result<Vec<Doctor>, Error> {
+	pub async fn get_doctors(&self) -> RedisResult<Vec<Doctor>> {
 		todo!()
 	}
-	pub async fn update_doctor(&self) -> Result<Doctor, Error> {
+	pub async fn update_doctor(&self) -> RedisResult<Doctor> {
 		todo!()
 	}
-	pub async fn delete_doctor(&self, id: String) -> Result<bool, Error> {
+	pub async fn delete_doctor(&self, id: String) -> RedisResult<bool> {
 		todo!()
 	}
 }

@@ -1,7 +1,11 @@
 use async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
-pub struct DateTimeUtc(pub DateTime<Utc>);
+use crate::utils::deserialize_from_str;
+
+#[derive(Serialize, Deserialize)]
+pub struct DateTimeUtc(#[serde(deserialize_with = "deserialize_from_str")] pub DateTime<Utc>);
 
 #[Scalar]
 impl ScalarType for DateTimeUtc {

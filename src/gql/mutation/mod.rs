@@ -1,7 +1,7 @@
 use async_graphql::MergedObject;
 
-use user_mutation::UserMutation;
 use doctor_mutation::DoctorMutation;
+use user_mutation::UserMutation;
 
 mod doctor_mutation;
 mod user_mutation;

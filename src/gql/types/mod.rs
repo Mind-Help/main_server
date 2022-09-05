@@ -1,11 +1,11 @@
 use async_graphql::{Error as GqlError, Result as GqlResult};
-use tokio_postgres::Error;
+use redis::RedisError;
 
 pub mod date;
-pub mod uuid;
 pub mod input;
+pub mod uuid;
 
-pub fn from_db_result<T>(db_result: Result<T, Error>) -> GqlResult<T> {
+pub fn from_db_result<T>(db_result: Result<T, RedisError>) -> GqlResult<T> {
 	match db_result {
 		Ok(val) => Ok(val),
 		Err(err) => Err(GqlError {

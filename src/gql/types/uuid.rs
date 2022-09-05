@@ -1,9 +1,13 @@
 use std::str::FromStr;
 
 use async_graphql::{InputValueResult, Scalar, ScalarType, Value};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-pub struct MyUuid(pub Uuid);
+use crate::utils::deserialize_from_str;
+
+#[derive(Serialize, Deserialize)]
+pub struct MyUuid(#[serde(deserialize_with = "deserialize_from_str")] pub Uuid);
 
 #[Scalar]
 impl ScalarType for MyUuid {

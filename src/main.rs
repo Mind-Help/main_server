@@ -4,11 +4,10 @@ use std::env::var;
 mod db;
 mod gql;
 mod routes;
+mod utils;
 
 #[tokio::main]
 async fn main() {
-	dotenv::dotenv().ok();
-
 	let app = build_routes().await;
 	let addr = format!(
 		"[::]:{}",
