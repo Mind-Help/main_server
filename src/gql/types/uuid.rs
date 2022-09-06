@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::utils::deserialize_from_str;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct MyUuid(#[serde(deserialize_with = "deserialize_from_str")] pub Uuid);
 
 #[Scalar]

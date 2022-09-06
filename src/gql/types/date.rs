@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::utils::deserialize_from_str;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct DateTimeUtc(#[serde(deserialize_with = "deserialize_from_str")] pub DateTime<Utc>);
 
 #[Scalar]

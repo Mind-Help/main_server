@@ -402,10 +402,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "dotenv"
-version = "0.15.0"
+name = "dotenv-build"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
+checksum = "f4547f16c17f6051a12cdb8c62b803f94bee6807c74aa7c530b30b737df981fc"
 
 [[package]]
 name = "encoding_rs"
@@ -740,7 +740,7 @@ dependencies = [
  "async-graphql-axum",
  "axum",
  "chrono",
- "dotenv",
+ "dotenv-build",
  "redis",
  "rust-argon2",
  "serde",

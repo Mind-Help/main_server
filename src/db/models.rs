@@ -1,12 +1,13 @@
+use std::{io::Read, str::from_utf8};
+
 use argon2::{hash_encoded, Config};
 use async_graphql::{Enum, SimpleObject};
+use axum::body::HttpBody;
 use chrono::Utc;
-use redis::FromRedisValue;
-use serde::{Deserialize, Serialize};
+use redis::{FromRedisValue, RedisError, Value};
+use serde::{ser::Error, Deserialize, Serialize};
 use serde_json::from_str;
 use uuid::Uuid;
-
-use std::{env, io::Read};
 
 use crate::gql::types::{date::DateTimeUtc, uuid::MyUuid};
 
@@ -19,13 +20,13 @@ pub enum UserStatus {
 impl ToString for UserStatus {
 	fn to_string(&self) -> String {
 		match self {
-			Self::Normal => "NORMAL".to_string(),
-			Self::Pro => "PRO".to_string(),
+			Self::Normal => String::from("NORMAL"),
+			Self::Pro => String::from("PRO"),
 		}
 	}
 }
 
-#[derive(SimpleObject, Serialize, Deserialize)]
+#[derive(SimpleObject, Serialize, Deserialize, Clone)]
 pub struct User {
 	pub id: MyUuid,
 	pub name: String,
@@ -39,6 +40,7 @@ pub struct User {
 	pub updated_at: DateTimeUtc,
 }
 
+// FIXME
 impl FromRedisValue for User {
 	fn from_byte_vec(vec: &[u8]) -> Option<Vec<Self>> {
 		if vec.len() <= 0 {
@@ -49,10 +51,40 @@ impl FromRedisValue for User {
 		Some(from_str(&buf).unwrap())
 	}
 	fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {
-		todo!()
+		match v {
+			Value::Nil => todo!(),
+			Value::Int(int) => Err(RedisError::from(serde_json::Error::custom(format!(
+				"int??: {int}"
+			)))),
+			Value::Data(data) => {
+				let mut buffer = String::new();
+				data.as_slice().read_to_string(&mut buffer).unwrap();
+
+				if let Ok(user) = from_str(&buffer) {
+					return Ok(user);
+				}
+
+				Err(RedisError::from(serde_json::Error::custom(
+					"unable to parse value from redis",
+				)))
+			}
+			Value::Bulk(bulk) => {
+				let pseudo_users = bulk
+					.iter()
+					.map(|val| User::from_redis_value(val).unwrap())
+					.collect::<Vec<User>>();
+
+				Ok(pseudo_users[0].clone())
+			}
+			Value::Status(_) => unreachable!(),
+			Value::Okay => unreachable!(),
+		}
 	}
 	fn from_redis_values(items: &[redis::Value]) -> redis::RedisResult<Vec<Self>> {
-		todo!()
+		Ok(items
+			.iter()
+			.map(|val| User::from_redis_value(val).unwrap())
+			.collect())
 	}
 }
 
