@@ -1,8 +1,8 @@
 use async_graphql::{Context, Object, Result};
 
 use crate::{
-	db::{models::Doctor, Database},
-	gql::types::{from_db_result, input::DoctorIT},
+	db::{models::User, Database, Where},
+	gql::types::from_db_result,
 };
 
 #[derive(Default)]
@@ -10,21 +10,22 @@ pub struct DoctorMutation;
 
 #[Object]
 impl DoctorMutation {
-	async fn create_doctor(&self, ctx: &Context<'_>, data: DoctorIT) -> Result<Doctor> {
-		let db = ctx.data::<Database>().unwrap();
+	async fn create_doctor(&self, ctx: &Context<'_>, _data: String) -> Result<User> {
+		/*let db = ctx.data::<Database>().unwrap();
 		from_db_result(
 			db.create_doctor(
 				data.name,
 				data.email,
 				data.password,
-				data.phone,
+				"".to_string(),
 				data.resume,
 			)
 			.await,
-		)
+		)*/
+		todo!()
 	}
-	async fn delete_doctor(&self, ctx: &Context<'_>, id: String) -> Result<bool> {
+	async fn delete_doctor(&self, ctx: &Context<'_>, r#where: Where) -> Result<bool> {
 		let db = ctx.data::<Database>().unwrap();
-		from_db_result(db.delete_doctor(id).await)
+		from_db_result(db.delete_doctor(r#where).await)
 	}
 }

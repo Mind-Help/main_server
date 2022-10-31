@@ -1,7 +1,7 @@
 use async_graphql::{Context, Object, Result};
 
 use crate::{
-	db::{models::User, Database},
+	db::{models::User, Database, Where},
 	gql::types::from_db_result,
 };
 
@@ -14,8 +14,8 @@ impl UserQuery {
 		let db = ctx.data::<Database>().unwrap();
 		from_db_result(db.get_users().await)
 	}
-	async fn get_user(&self, ctx: &Context<'_>, id: String) -> Result<User> {
+	async fn get_user(&self, ctx: &Context<'_>, r#where: Where) -> Result<User> {
 		let db = ctx.data::<Database>().unwrap();
-		from_db_result(db.get_user(id).await)
+		from_db_result(db.get_user(r#where).await)
 	}
 }
