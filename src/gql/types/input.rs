@@ -1,6 +1,6 @@
 use async_graphql::InputObject;
 
-use crate::db::models::UserStatus;
+// use crate::db::models::UserStatus;
 
 #[derive(InputObject)]
 pub struct UserIT {
@@ -8,5 +8,14 @@ pub struct UserIT {
 	// #[graphql(validator(email))]
 	pub email: String,
 	pub password: String,
-	pub status: Option<UserStatus>,
+	// pub status: Option<UserStatus>,
+}
+
+#[derive(InputObject)]
+pub struct GoogleUserIT {
+	pub name: String,
+	pub email: String,
+	pub photo: Option<String>,
+	pub password: String,
+	// pub status: UserStatus,
 }

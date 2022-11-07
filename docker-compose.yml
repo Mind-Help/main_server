@@ -1,0 +1,15 @@
+version: "3.7"
+services:
+  debug_db:
+    image: redis/redis-stack
+    restart: always
+    ports:
+      # actual db
+      - "6379:6379"
+      # redis-insight
+      - "8001:8001"
+  release_db:
+    image: redislabs/redisgraph
+    restart: always
+    ports:
+      - "6379:6379"

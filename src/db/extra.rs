@@ -2,24 +2,23 @@ use std::io::Read;
 
 use async_graphql::{Enum, InputObject};
 use chrono::{DateTime, Utc};
-use redis::{aio::Connection, FromRedisValue, RedisResult, Value};
+use redis::{aio::Connection, RedisResult, Value};
 use redis_graph::{AsyncGraphCommands, GraphResultSet, GraphValue};
-use serde_json::from_str;
 use uuid::Uuid;
 
-use super::models::{Doctor, User, UserStatus};
+use super::models::{User, UserStatus};
 
 impl Default for UserStatus {
 	fn default() -> Self {
-		Self::NORMAL
+		Self::Normal
 	}
 }
 
 impl ToString for UserStatus {
 	fn to_string(&self) -> String {
 		match self {
-			Self::NORMAL => String::from("NORMAL"),
-			Self::PRO => String::from("PRO"),
+			Self::Normal => String::from("NORMAL"),
+			Self::Pro => String::from("PRO"),
 		}
 	}
 }
@@ -27,9 +26,9 @@ impl ToString for UserStatus {
 impl From<String> for UserStatus {
 	fn from(val: String) -> Self {
 		if val.to_lowercase() == "pro" {
-			return Self::PRO;
+			return Self::Pro;
 		}
-		Self::NORMAL
+		Self::Normal
 	}
 }
 
@@ -58,25 +57,33 @@ pub struct Where {
 
 impl From<GraphValue> for User {
 	fn from(val: GraphValue) -> Self {
-		let extract_key = |key: &str| {
-			if let GraphValue::Node(x) = &val {
-				if let Value::Data(y) = x.properties.get(key).unwrap() {
-					let mut buffer = String::new();
-					y.as_slice().read_to_string(&mut buffer).unwrap();
-					return buffer;
-				};
-			}
-			todo!()
+		let extract_key = |key| {
+			let GraphValue::Node(val) = &val else { return None; };
+			let Some(Value::Data(data)) = val.properties.get(key) else { return  None;};
+
+			let mut buffer = String::new();
+			data.as_slice().read_to_string(&mut buffer).unwrap();
+
+			Some(buffer)
 		};
+
 		User {
-			id: Uuid::parse_str(&extract_key("id")).unwrap(),
-			name: extract_key("name"),
-			email: extract_key("email"),
+			id: Uuid::parse_str(&extract_key("id").unwrap()).unwrap(),
+			name: extract_key("name").unwrap(),
+			email: extract_key("email").unwrap(),
 			password: extract_key("password"),
-			phone: "".to_string(),
-			status: extract_key("status").into(),
-			created_at: extract_key("created_at").parse::<DateTime<Utc>>().unwrap(),
-			updated_at: extract_key("updated_at").parse::<DateTime<Utc>>().unwrap(),
+			phone: extract_key("phone"),
+			photo: extract_key("photo"),
+			resume: extract_key("resume"),
+			status: extract_key("status").unwrap().into(),
+			created_at: extract_key("created_at")
+				.unwrap()
+				.parse::<DateTime<Utc>>()
+				.unwrap(),
+			updated_at: extract_key("updated_at")
+				.unwrap()
+				.parse::<DateTime<Utc>>()
+				.unwrap(),
 		}
 	}
 }
@@ -89,6 +96,12 @@ impl From<GraphResultSet> for User {
 }
 
 pub async fn create_user_query(user: &User, conn: &mut Connection) -> RedisResult<GraphResultSet> {
+	let extract_to_null = |data: &Option<String>| {
+		if let Some(data) = data {
+			return "\"".to_string() + data + "\"";
+		}
+		"NULL".to_string()
+	};
 	conn.graph_query(
 		"users",
 		format!(
@@ -96,9 +109,10 @@ pub async fn create_user_query(user: &User, conn: &mut Connection) -> RedisResul
 			CREATE (u:User {{
 				id: "{}",
 				name: "{}",
-				password: "{}",
+				password: {},
 				email: "{}",
-				phone: NULL,
+				phone: {},
+				photo: {},
 				status: "{}",
 				resume: NULL,
 				created_at: "{}",
@@ -107,11 +121,14 @@ pub async fn create_user_query(user: &User, conn: &mut Connection) -> RedisResul
 		"#,
 			user.id,
 			user.name,
-			user.password,
+			extract_to_null(&user.password),
 			user.email,
+			extract_to_null(&user.phone),
+			extract_to_null(&user.photo),
 			user.status.to_string(),
-			user.created_at.to_string(),
-			user.updated_at.to_string()
+			// extract_to_null(&user.resume),
+			user.created_at,
+			user.updated_at
 		),
 	)
 	.await

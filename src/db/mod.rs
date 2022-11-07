@@ -1,8 +1,7 @@
-use redis::{Client, RedisError, RedisResult};
+use redis::{Client, ErrorKind, RedisError, RedisResult};
 use redis_graph::*;
 
 use models::*;
-use serde::de::Error;
 
 mod extra;
 pub mod models;
@@ -14,7 +13,6 @@ pub struct Database {
 	client: Client,
 }
 
-// TODO: remove the json feature + better error handling
 impl Database {
 	pub async fn new() -> RedisResult<Self> {
 		let client = Client::open(env!("REDIS_URL"))?;
@@ -25,20 +23,28 @@ impl Database {
 		&self,
 		name: String,
 		email: String,
-		password: String,
-		phone: String,
-		status: UserStatus,
+		phone: Option<String>,
+		photo: Option<String>,
+		password: Option<String>,
 	) -> RedisResult<User> {
-		let user = User::new(name, email, password, phone, status);
+		let user = User::new(
+			name,
+			email,
+			password,
+			phone,
+			photo,
+			None,
+			UserStatus::Normal,
+		);
 
 		let res = create_user_query(&user, &mut self.client.get_tokio_connection().await?).await?;
-		// println!("{:#?}", res.metadata);
 		if res.metadata[0] == "Nodes created: 1" {
 			return Ok(user);
 		}
 
-		Err(RedisError::from(serde_json::Error::custom(
-			"database internal error",
+		Err(RedisError::from((
+			ErrorKind::TryAgain,
+			"internal server error",
 		)))
 	}
 
@@ -56,6 +62,11 @@ impl Database {
 				),
 			)
 			.await?;
+
+		if res.data.is_empty() {
+			return Err(RedisError::from((ErrorKind::TryAgain, "user not found")));
+		}
+
 		Ok(res.into())
 	}
 
@@ -73,7 +84,7 @@ impl Database {
 			.collect::<Vec<User>>())
 	}
 
-	pub async fn update_user(&self) -> RedisResult<User> {
+	pub async fn _update_user(&self) -> RedisResult<User> {
 		todo!()
 	}
 
@@ -87,28 +98,16 @@ impl Database {
 				format!(
 					"MATCH (u: User) WHERE u.{} = \"{}\" DETACH DELETE u",
 					r#where.field.to_string(),
-					r#where.value.to_string()
+					r#where.value
 				),
 			)
 			.await?;
-		if res.metadata.len() <= 0 {
+
+		if res.metadata[0] == "Nodes deleted: 1" {
 			return Ok(true);
 		}
-		Err(RedisError::from(serde_json::Error::custom(
-			"user not found",
-		)))
+		Err(RedisError::from((ErrorKind::TryAgain, "user not found")))
 	}
-
-	/*pub async fn create_doctor(
-		&self,
-		name: String,
-		email: String,
-		password: String,
-		phone: String,
-		resume: String,
-	) -> RedisResult<Doctor> {
-		Ok(Doctor::new(name, email, password, phone, resume))
-	}*/
 
 	pub async fn get_doctor(&self, r#where: Where) -> RedisResult<User> {
 		let res = self
@@ -124,6 +123,11 @@ impl Database {
 				),
 			)
 			.await?;
+
+		if res.data.is_empty() {
+			return Err(RedisError::from((ErrorKind::TryAgain, "doctor not found")));
+		}
+
 		Ok(res.into())
 	}
 
@@ -152,17 +156,17 @@ impl Database {
 			.graph_query(
 				"users",
 				format!(
-					"MATCH (u: User) WHERE u.{} = \"{}\" DETACH DELETE u",
+					"MATCH (u: User) WHERE u.{} = \"{}\" AND u.resume IS NOT NULL DETACH DELETE u",
 					r#where.field.to_string(),
-					r#where.value.to_string()
+					r#where.value
 				),
 			)
 			.await?;
-		if res.metadata.len() <= 0 {
+
+		if res.metadata.is_empty() {
 			return Ok(true);
 		}
-		Err(RedisError::from(serde_json::Error::custom(
-			"doctor not found",
-		)))
+
+		Err(RedisError::from((ErrorKind::TryAgain, "doctor not found")))
 	}
 }

@@ -10,7 +10,7 @@ pub struct DoctorMutation;
 
 #[Object]
 impl DoctorMutation {
-	async fn create_doctor(&self, ctx: &Context<'_>, _data: String) -> Result<User> {
+	async fn create_doctor(&self, _ctx: &Context<'_>, _data: String) -> Result<User> {
 		/*let db = ctx.data::<Database>().unwrap();
 		from_db_result(
 			db.create_doctor(
