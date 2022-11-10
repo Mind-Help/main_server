@@ -7,11 +7,9 @@ ENV PORT=${PORT}
 ENV REDIS_URL=${REDIS_URL}
 ENV PASSWD_SECRET=${PASSWD_SECRET}
 
-WORKDIR /opt/main_server
 COPY . .
-RUN cargo build --release
+RUN cargo install --path .
 
 FROM alpine:latest
-WORKDIR /opt/main_server
-COPY --from=builder /opt/main_server/target/release/main_server .
+COPY --from=builder /usr/local/cargo/bin/main_server /usr/local/bin/main_server
 ENTRYPOINT ["main_server"]

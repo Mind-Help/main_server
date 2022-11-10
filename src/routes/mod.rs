@@ -19,7 +19,11 @@ pub async fn build_routes() -> Router {
 		.layer(
 			CorsLayer::new()
 				.allow_origin("*".parse::<HeaderValue>().unwrap())
-				.allow_methods([Method::POST]),
+				.allow_methods([
+					Method::POST,
+					#[cfg(debug_assertions)]
+					Method::GET,
+				]),
 		)
 		.layer(Extension(schema))
 }
