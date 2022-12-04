@@ -1,13 +1,13 @@
 #[cfg(debug_assertions)]
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
+use axum::extract::State;
 #[cfg(debug_assertions)]
 use axum::response::{Html, IntoResponse};
-use axum::Extension;
 
 use crate::gql::schema::AppSchema;
 
-pub async fn graphql_handler(schema: Extension<AppSchema>, req: GraphQLRequest) -> GraphQLResponse {
+pub async fn graphql_handler(schema: State<AppSchema>, req: GraphQLRequest) -> GraphQLResponse {
 	schema.execute(req.into_inner()).await.into()
 }
 

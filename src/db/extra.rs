@@ -6,6 +6,8 @@ use redis::{aio::Connection, RedisResult, Value};
 use redis_graph::{AsyncGraphCommands, GraphResultSet, GraphValue};
 use uuid::Uuid;
 
+use crate::gql::types::input::UpdateUserIT;
+
 use super::models::{User, UserStatus};
 
 impl Default for UserStatus {
@@ -28,6 +30,7 @@ impl From<String> for UserStatus {
 		if val.to_lowercase() == "pro" {
 			return Self::Pro;
 		}
+		assert!(val.to_lowercase() == "normal");
 		Self::Normal
 	}
 }
@@ -95,7 +98,10 @@ impl From<GraphResultSet> for User {
 	}
 }
 
-pub async fn create_user_query(user: &User, conn: &mut Connection) -> RedisResult<GraphResultSet> {
+pub async fn build_create_user_query(
+	user: &User,
+	conn: &mut Connection,
+) -> RedisResult<GraphResultSet> {
 	let extract_to_null = |data: &Option<String>| {
 		if let Some(data) = data {
 			return "\"".to_string() + data + "\"";
@@ -129,6 +135,35 @@ pub async fn create_user_query(user: &User, conn: &mut Connection) -> RedisResul
 			// extract_to_null(&user.resume),
 			user.created_at,
 			user.updated_at
+		),
+	)
+	.await
+}
+
+pub async fn build_update_user_query(
+	input: UpdateUserIT,
+	conn: &mut Connection,
+) -> RedisResult<GraphResultSet> {
+	let query = input
+		.data
+		.into_iter()
+		.map(|(key, value)| {
+			if key.eq(&crate::gql::types::input::Fields::Status) {
+				// assert that it's a valid status
+				let value = UserStatus::from(value);
+				format!("u.status = \"{}\"", value.to_string())
+			} else {
+				format!("u.{} = \"{value}\"", key.to_string())
+			}
+		})
+		.collect::<Vec<String>>()
+		.join(", ");
+
+	conn.graph_query(
+		"users",
+		format!(
+			"MATCH (u: User {{ id: \"{}\" }}) SET {query} RETURN u",
+			input.id
 		),
 	)
 	.await

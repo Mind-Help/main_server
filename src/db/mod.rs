@@ -1,3 +1,8 @@
+//
+// FIXME:
+// "SQL Injection" for each query
+//
+
 use redis::{Client, ErrorKind, RedisError, RedisResult};
 use redis_graph::*;
 
@@ -7,7 +12,11 @@ mod extra;
 pub mod models;
 pub use extra::{Where, WhereFields};
 
-use extra::create_user_query;
+use extra::build_create_user_query;
+
+use crate::gql::types::input::UpdateUserIT;
+
+use self::extra::build_update_user_query;
 
 pub struct Database {
 	client: Client,
@@ -37,10 +46,13 @@ impl Database {
 			UserStatus::Normal,
 		);
 
-		let res = create_user_query(&user, &mut self.client.get_tokio_connection().await?).await?;
-		if res.metadata[0] == "Nodes created: 1" {
-			return Ok(user);
-		}
+		let res =
+			build_create_user_query(&user, &mut self.client.get_tokio_connection().await?).await?;
+
+		println!("{res:#?}");
+		// if res.metadata[0] == "Nodes created: 1" {
+		// 	return Ok(user);
+		// }
 
 		Err(RedisError::from((
 			ErrorKind::TryAgain,
@@ -84,8 +96,13 @@ impl Database {
 			.collect::<Vec<User>>())
 	}
 
-	pub async fn _update_user(&self) -> RedisResult<User> {
-		todo!()
+	pub async fn update_user(&self, input: UpdateUserIT) -> RedisResult<User> {
+		let res =
+			build_update_user_query(input, &mut self.client.get_tokio_connection().await?).await?;
+		if res.data.is_empty() {
+			return Err(RedisError::from((ErrorKind::TryAgain, "user not found")));
+		}
+		Ok(res.into())
 	}
 
 	pub async fn delete_user(&self, r#where: Where) -> RedisResult<bool> {

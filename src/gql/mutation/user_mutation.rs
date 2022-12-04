@@ -4,7 +4,7 @@ use crate::{
 	db::{models::User, Database, Where, WhereFields},
 	gql::types::{
 		from_db_result,
-		input::{GoogleUserIT, UserIT},
+		input::{GoogleUserIT, UpdateUserIT, UserIT},
 	},
 };
 
@@ -53,5 +53,9 @@ impl UserMutation {
 		Ok(db
 			.create_user(data.name, data.email, None, data.photo, None)
 			.await?)
+	}
+	async fn update_user(&self, ctx: &Context<'_>, data: UpdateUserIT) -> Result<User> {
+		let db = ctx.data::<Database>().unwrap();
+		from_db_result(db.update_user(data).await)
 	}
 }
