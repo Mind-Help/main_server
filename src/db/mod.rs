@@ -49,7 +49,7 @@ impl Database {
 		let res =
 			build_create_user_query(&user, &mut self.client.get_tokio_connection().await?).await?;
 
-		println!("{res:#?}");
+		// println!("{res:#?}");
 		// if res.metadata[0] == "Nodes created: 1" {
 		// 	return Ok(user);
 		// }
